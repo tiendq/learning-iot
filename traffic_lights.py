@@ -14,6 +14,7 @@ led_walker = machine.Pin(11, machine.Pin.OUT)
 button = machine.Pin(16, machine.Pin.IN, machine.Pin.PULL_DOWN)
 
 # turn on light for pedestrians.
+# Method 1
 def button_reader_thread():
     global button_pressed
     while True:
@@ -21,12 +22,21 @@ def button_reader_thread():
             button_pressed = True
         utime.sleep(0.1)
 
+# Method 2
+def button_irq_handler(pin):
+    global button_pressed
+    button_pressed = True
+
 led_red.off()
 led_yellow.off()
 led_green.off()
 led_walker.off()
 
-_thread.start_new_thread(button_reader_thread, ())
+# Method 1
+# _thread.start_new_thread(button_reader_thread, ())
+
+# Method 2
+button.irq(trigger=machine.Pin.IRQ_RISING, handler=button_irq_handler)
 
 while True:
     led_red.on()
