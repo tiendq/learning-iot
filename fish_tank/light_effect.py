@@ -1,3 +1,5 @@
+# light_effect.py
+
 import utime
 
 def wheel(pos):
@@ -16,8 +18,8 @@ def wheel(pos):
 # Moving rainbow effect.
 def rainbow_cycle(pixels, delay_ms):
   for j in range(255):
-    for i in range(pixels.__len__):
-      rc_index = (i * 256 // pixels.__len__) + j
+    for i in range(len(pixels)):
+      rc_index = (i * 256 // len(pixels)) + j
       pixels[i] = wheel(rc_index & 255)
     pixels.write()
     utime.sleep_ms(delay_ms)
