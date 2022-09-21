@@ -23,3 +23,25 @@ def rainbow_cycle(pixels, delay_ms):
       pixels[i] = wheel(rc_index & 255)
     pixels.write()
     utime.sleep_ms(delay_ms)
+
+def turn_light_on(pixels):
+  step = 5
+  brightness = 0
+
+  while brightness < 225:
+    brightness = brightness + step
+    for i in range(len(pixels)):
+      pixels[i] = (brightness, brightness, brightness)
+    pixels.write()
+    utime.sleep_ms(200)
+
+def turn_light_off(pixels):
+  step = 5
+  brightness = 225
+
+  while brightness > 0:
+    brightness = brightness - step
+    for i in range(len(pixels)):
+      pixels[i] = (brightness, brightness, brightness)
+    pixels.write()
+    utime.sleep_ms(200)

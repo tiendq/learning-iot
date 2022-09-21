@@ -15,4 +15,8 @@ for i in range(LED_COUNT):
   pixels[i] = (0, 0, 0)
 pixels.write()
 
-light_effect.rainbow_cycle(pixels, 100)
+# light_effect.rainbow_cycle(pixels, 100)
+
+light_effect.turn_light_on(pixels)
+utime.sleep(5)
+light_effect.turn_light_off(pixels)

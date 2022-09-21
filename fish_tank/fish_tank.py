@@ -2,6 +2,7 @@ import machine
 import neopixel
 import utime
 import light_effect
+import esp8266_utils
 
 DIN_PIN = 5
 #LED_ONBOARD_PIN = 25 # Pico
@@ -12,8 +13,12 @@ LED_COUNT = 20 # ESP8266
 pixels = neopixel.NeoPixel(machine.Pin(DIN_PIN), LED_COUNT)
 
 is_led_on = False
-turn_on_hour = 17
-turn_off_hour = 21
+turn_on_hour = 17 # <==
+turn_off_hour = 21 # <==
+
+# Note that on method of a Pin might turn the LED off and off might turn it on (or vice versa),
+# depending on how the LED is wired on your board.
+led_onboard = machine.Pin(LED_ONBOARD_PIN, machine.Pin.OUT)
 
 def clear_pixels(pixels):
   for i in range(len(pixels)):
@@ -32,6 +37,8 @@ def run_effects(hour, minute):
     print('running rainbow_cycle')
     for i in range(10):
       light_effect.rainbow_cycle(pixels, 10)
+    return True
+  return False
 
 def handle_led_strip(hour, minute):
   if hour < turn_on_hour:
@@ -42,21 +49,18 @@ def handle_led_strip(hour, minute):
   if is_led_on:
     if hour >= turn_off_hour:
       is_led_on = False
-      clear_pixels(pixels)
+      light_effect.turn_light_off(pixels)
       print('LED turned off')
     else:
-      run_effects(hour, minute)
-      utime.sleep_ms(300)
-      set_all_white(pixels)
+      if run_effects(hour, minute):
+        clear_pixels(pixels)
+        utime.sleep_ms(100)
+        light_effect.turn_light_on(pixels)
 
   if not is_led_on and hour < turn_off_hour:
     is_led_on = True
-    set_all_white(pixels)
+    light_effect.turn_light_on(pixels)
     print('LED turned on')
-
-# Note that on method of a Pin might turn the LED off and off might turn it on (or vice versa),
-# depending on how the LED is wired on your board.
-led_onboard = machine.Pin(LED_ONBOARD_PIN, machine.Pin.OUT)
 
 def start():
   led_onboard.off()
@@ -65,11 +69,15 @@ def start():
 
   # It's worth doing a reset since colors might be not displayed correctly.
   clear_pixels(pixels)
-
-  # utc_offset = 0 # emulation mode
+  #utc_offset = 0 # emulation mode
   utc_offset = 7 * 60 * 60 # production mode
+
   while True:
     now = utime.localtime(utime.time() + utc_offset)
     # print('local time: ', now)
     handle_led_strip(now[3], now[4])
     utime.sleep(60)
+
+    # Sync. time every day to keep RTC works exactly.
+    if now[3] % 23 == 0:
+      esp8266_utils.sync_ntp_time()
