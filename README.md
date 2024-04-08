@@ -1,2 +1,3 @@
 # learning-iot
-Learing IoT for funs.
+
+Learning IoT for funs.
