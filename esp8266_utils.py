@@ -1,18 +1,20 @@
-import network
-import ntptime
-import utime
+import network # type: ignore
+import ntptime # type: ignore
+import utime # type: ignore
 
 def connect_wifi(ssid, password):
   sta_if = network.WLAN(network.STA_IF)
 
+  print('Connecting to {0} network...', ssid)
+
   if not sta_if.isconnected():
-    print('Connecting to {0} network...', ssid)
     sta_if.active(True)
     sta_if.connect(ssid, password)
 
     while not sta_if.isconnected():
       utime.sleep_ms(500)
-  print('Connected: ', sta_if.ifconfig())
+
+  print('Connected ', sta_if.ifconfig())
 
 # Local time is 01-01-2000 00:00:00 at boot time.
 # Sync. time with NTP server to get correct local time.
