@@ -1,36 +1,60 @@
 import machine # type: ignore
 import utime # type: ignore
+import env
 import esp8266_utils
 
-LED_ON_HOUR = 19
-LED_OFF_HOUR = 21
-
 is_led_on = False
+is_always_on = False
+
 led_green = machine.Pin(4, machine.Pin.OUT)
-led_switch = machine.Pin(10, machine.Pin.OUT)
+led_strip = machine.Pin(7, machine.Pin.OUT)
+always_on_button = machine.Pin(9, machine.Pin.IN, machine.Pin.PULL_UP)
+
+def always_on_button_handler(pin):
+  global is_led_on
+  global is_always_on
+
+  if is_always_on:
+    is_led_on = False
+    led_green.value(0)
+    led_strip.value(0)
+  else:
+    is_led_on = True
+    led_green.value(1)
+    led_strip.value(1)
+
+  is_always_on = not is_always_on
+
+  print('is_always_on', is_always_on)
+  print('is_led_on', is_led_on)
 
 def handle_led_strip(hour):
   global is_led_on
 
-  if hour >= LED_ON_HOUR and hour <= LED_OFF_HOUR:
+  if is_always_on:
+    return True
+
+  if hour >= env.LED_ON_HOUR and hour <= env.LED_OFF_HOUR:
     if not is_led_on:
       is_led_on = True
-      led_green.value(1)
-      led_switch.value(1)
+      led_strip.value(1)
   else:
     if is_led_on:
       is_led_on = False
-      led_green.value(0)
-      led_switch.value(0)
+      led_strip.value(0)
 
-def start():
-  utc_offset = 7 * 60 * 60 # production mode 7 * 60 * 60
+  print('is_led_on', is_led_on)
+
+def run():
+  utc_offset = 7 * 60 * 60
+  always_on_button.irq(trigger=machine.Pin.IRQ_FALLING, handler=always_on_button_handler)
 
   while True:
     now = utime.localtime(utime.time() + utc_offset)
-    handle_led_strip(now[3])
+    hour = now[3]
+    handle_led_strip(hour)
 
-    if now[3] % 10 == 0:
+    if hour % 10 == 0:
       esp8266_utils.sync_ntp_time() # synchronize time periodically to keep RTC works exactly
 
-    utime.sleep(60)
+    utime.sleep(15)
