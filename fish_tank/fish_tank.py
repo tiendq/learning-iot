@@ -4,13 +4,13 @@ import utime
 import light_effect
 import esp8266_utils
 
-DIN_PIN = 5
-#LED_ONBOARD_PIN = 25 # Pico
+LED_DIN_PIN = 5
 LED_ONBOARD_PIN = 2 # ESP8266
-#LED_COUNT = 10 # Pico
-LED_COUNT = 20 # ESP8266
+LED_COUNT = 25 # ESP8266
 
-pixels = neopixel.NeoPixel(machine.Pin(DIN_PIN), LED_COUNT)
+pixels = neopixel.NeoPixel(machine.Pin(LED_DIN_PIN), LED_COUNT)
+
+pixels = neopixel.NeoPixel(machine.Pin(5), 25)
 
 is_led_on = False
 turn_on_hour = 17 # <==
@@ -19,6 +19,7 @@ turn_off_hour = 21 # <==
 # Note that on method of a Pin might turn the LED off and off might turn it on (or vice versa),
 # depending on how the LED is wired on your board.
 led_onboard = machine.Pin(LED_ONBOARD_PIN, machine.Pin.OUT)
+pin5 = machine.Pin(5, machine.Pin.OUT)
 
 def clear_pixels(pixels):
   for i in range(len(pixels)):

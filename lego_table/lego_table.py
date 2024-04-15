@@ -47,6 +47,7 @@ def handle_led_strip(hour):
 
 def run():
   utc_offset = 7 * 60 * 60
+  # Pin is always in high (3.3V) by default => need to trigger with GND pin.
   always_on_button.irq(trigger=machine.Pin.IRQ_FALLING, handler=always_on_button_handler)
 
   while True:
