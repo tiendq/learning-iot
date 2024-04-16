@@ -1,47 +1,64 @@
-# light_effect.py
+import utime # type: ignore
 
-import utime
-
-def wheel(pos):
-  # Input a value 0 to 255 to get a color value.
-  # The colours are a transition r - g - b - back to r.
-  if pos < 0 or pos > 255:
+# Input a value 0 to 255 to get a color value.
+# The colours are a transition r - g - b - back to r.
+# Ref: https://bhave.sh/micropython-neopixels-1/
+def get_wheel_color(index):
+  if index < 0 or index > 255:
     return (0, 0, 0)
-  if pos < 85:
-    return (255 - pos * 3, pos * 3, 0)
-  if pos < 170:
-    pos -= 85
-    return (0, 255 - pos * 3, pos * 3)
-  pos -= 170
-  return (pos * 3, 0, 255 - pos * 3)
 
-# Moving rainbow effect.
-def rainbow_cycle(pixels, delay_ms):
+  if index < 85:
+    return (255 - index * 3, index * 3, 0)
+
+  if index < 170:
+    index -= 85
+    return (0, 255 - index * 3, index * 3)
+
+  index -= 170
+  return (index * 3, 0, 255 - index * 3)
+
+# Making cycling rainbow effect.
+def make_rainbow_cycle(pixels, delay_ms):
   for j in range(255):
     for i in range(len(pixels)):
-      rc_index = (i * 256 // len(pixels)) + j
-      pixels[i] = wheel(rc_index & 255)
+      color = (i * 256 // len(pixels)) + j
+      pixels[i] = get_wheel_color(color & 255)
+
     pixels.write()
     utime.sleep_ms(delay_ms)
 
-def turn_light_on(pixels):
+def turn_light_on(pixels, delay_ms):
   step = 5
   brightness = 0
 
   while brightness < 225:
     brightness = brightness + step
+
     for i in range(len(pixels)):
       pixels[i] = (brightness, brightness, brightness)
-    pixels.write()
-    utime.sleep_ms(200)
 
-def turn_light_off(pixels):
+    pixels.write()
+    utime.sleep_ms(delay_ms)
+
+def turn_light_off(pixels, delay_ms):
   step = 5
   brightness = 225
 
   while brightness > 0:
     brightness = brightness - step
+
     for i in range(len(pixels)):
       pixels[i] = (brightness, brightness, brightness)
+
     pixels.write()
-    utime.sleep_ms(200)
+    utime.sleep_ms(delay_ms)
+
+def clear_pixels(pixels):
+  for i in range(len(pixels)):
+    pixels[i] = (0, 0, 0)
+  pixels.write()
+
+def turn_on_white(pixels, brightness = 225):
+  for i in range(len(pixels)):
+    pixels[i] = (brightness, brightness, brightness)
+  pixels.write()

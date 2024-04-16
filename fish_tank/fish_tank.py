@@ -1,84 +1,71 @@
-import machine
-import neopixel
-import utime
-import light_effect
+import machine # type: ignore
+import neopixel # type: ignore
+import utime # type: ignore
+import env
 import esp8266_utils
-
-LED_DIN_PIN = 5
-LED_ONBOARD_PIN = 2 # ESP8266
-LED_COUNT = 25 # ESP8266
-
-pixels = neopixel.NeoPixel(machine.Pin(LED_DIN_PIN), LED_COUNT)
-
-pixels = neopixel.NeoPixel(machine.Pin(5), 25)
-
-is_led_on = False
-turn_on_hour = 17 # <==
-turn_off_hour = 21 # <==
+import light_effect
 
 # Note that on method of a Pin might turn the LED off and off might turn it on (or vice versa),
 # depending on how the LED is wired on your board.
-led_onboard = machine.Pin(LED_ONBOARD_PIN, machine.Pin.OUT)
-pin5 = machine.Pin(5, machine.Pin.OUT)
+led_onboard = machine.Pin(2, machine.Pin.OUT)
+led_strip = machine.Pin(5, machine.Pin.OUT)
+pixels = neopixel.NeoPixel(led_strip, 25)
+always_on_button = machine.Pin(14, machine.Pin.IN, machine.Pin.PULL_UP)
 
-def clear_pixels(pixels):
-  for i in range(len(pixels)):
-    pixels[i] = (0, 0, 0)
-  pixels.write()
+is_led_on = False
+is_always_on = False
 
-def set_all_white(pixels):
-  for i in range(len(pixels)):
-    pixels[i] = (225, 225, 225)
-  pixels.write()
+def always_on_button_handler(pin):
+  global is_led_on
+  global is_always_on
 
-def run_effects(hour, minute):
-  x = minute % 5
+  print('button pressed')
 
-  if 0 == x:
-    print('running rainbow_cycle')
-    for i in range(10):
-      light_effect.rainbow_cycle(pixels, 10)
+  if is_always_on:
+    is_led_on = False
+    led_onboard.value(1) # off
+    light_effect.clear_pixels(pixels)
+  else:
+    is_led_on = True
+    led_onboard.value(0) # on
+    light_effect.turn_on_white(pixels)
+
+  is_always_on = not is_always_on
+
+  print('is_always_on', is_always_on)
+  print('is_led_on', is_led_on)
+
+def handle_led_strip(hour):
+  if is_always_on:
     return True
-  return False
-
-def handle_led_strip(hour, minute):
-  if hour < turn_on_hour:
-    return None
 
   global is_led_on
 
-  if is_led_on:
-    if hour >= turn_off_hour:
+  if hour >= env.LED_ON_HOUR and hour <= env.LED_OFF_HOUR:
+    if not is_led_on:
+      is_led_on = True
+      light_effect.turn_light_on(pixels, 200)
+  else:
+    if is_led_on:
       is_led_on = False
-      light_effect.turn_light_off(pixels)
-      print('LED turned off')
-    else:
-      if run_effects(hour, minute):
-        clear_pixels(pixels)
-        utime.sleep_ms(100)
-        light_effect.turn_light_on(pixels)
+      light_effect.turn_light_off(pixels, 200)
 
-  if not is_led_on and hour < turn_off_hour:
-    is_led_on = True
-    light_effect.turn_light_on(pixels)
-    print('LED turned on')
+  print('is_led_on', is_led_on)
 
-def start():
-  led_onboard.off()
-  utime.sleep_ms(500)
-  led_onboard.on()  # it actually turns the LED off!
+def run():
+  utc_offset = 7 * 60 * 60
 
   # It's worth doing a reset since colors might be not displayed correctly.
-  clear_pixels(pixels)
-  #utc_offset = 0 # emulation mode
-  utc_offset = 7 * 60 * 60 # production mode
+  light_effect.clear_pixels(pixels)
+  always_on_button.irq(trigger=machine.Pin.IRQ_FALLING, handler=always_on_button_handler)
 
   while True:
     now = utime.localtime(utime.time() + utc_offset)
-    # print('local time: ', now)
-    handle_led_strip(now[3], now[4])
-    utime.sleep(60)
+    hour = now[3]
+    handle_led_strip(hour)
 
     # Sync. time every day to keep RTC works exactly.
-    if now[3] % 23 == 0:
+    if hour % 23 == 0:
       esp8266_utils.sync_ntp_time()
+
+    utime.sleep(15)

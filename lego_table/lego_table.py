@@ -29,10 +29,10 @@ def always_on_button_handler(pin):
   print('is_led_on', is_led_on)
 
 def handle_led_strip(hour):
-  global is_led_on
-
   if is_always_on:
     return True
+
+  global is_led_on
 
   if hour >= env.LED_ON_HOUR and hour <= env.LED_OFF_HOUR:
     if not is_led_on:
@@ -47,6 +47,7 @@ def handle_led_strip(hour):
 
 def run():
   utc_offset = 7 * 60 * 60
+
   # Pin is always in high (3.3V) by default => need to trigger with GND pin.
   always_on_button.irq(trigger=machine.Pin.IRQ_FALLING, handler=always_on_button_handler)
 
@@ -55,7 +56,8 @@ def run():
     hour = now[3]
     handle_led_strip(hour)
 
-    if hour % 10 == 0:
-      esp8266_utils.sync_ntp_time() # synchronize time periodically to keep RTC works exactly
+    # Sync. time periodically to keep RTC works exactly.
+    if hour % 23 == 0:
+      esp8266_utils.sync_ntp_time()
 
     utime.sleep(15)
