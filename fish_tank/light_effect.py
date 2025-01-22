@@ -62,3 +62,13 @@ def turn_on_white(pixels, brightness = 225):
   for i in range(len(pixels)):
     pixels[i] = (brightness, brightness, brightness)
   pixels.write()
+
+def turn_sunlight_on(pixels):
+    for i in range(len(pixels)):
+      pixels[i] = (244, 233, 155)
+    pixels.write()
+
+def turn_sunlight_off(pixels):
+    for i in range(len(pixels)):
+      pixels[i] = (0, 0, 0)
+    pixels.write()
