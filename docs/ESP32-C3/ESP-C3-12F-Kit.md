@@ -28,12 +28,15 @@ Source: [ESP32-C3 series module](https://docs.ai-thinker.com/en/esp32c3)
 
 ## Setup MicroPython
 
-Flashing [ESP32-C3](https://micropython.org/download/ESP32_GENERIC_C3/)
+Install [Esptool Documentation](https://docs.espressif.com/projects/esptool/en/latest/esp32c3/)
+
+Download firmware [ESP32-C3](https://micropython.org/download/ESP32_GENERIC_C3/)
+
+Flashing
 
 ```bash
-esptool.py --chip esp32c3 --port /dev/tty.usbserial-110 erase_flash
-
-esptool.py --chip esp32c3 --port /dev/tty.usbserial-110 --baud 460800 write_flash -z 0x0 ESP32_GENERIC_C3-20240222-v1.22.2.bin
+esptool --chip esp32c3 --port /dev/tty.usbserial-110 erase-flash
+esptool --chip esp32c3 --port /dev/tty.usbserial-110 --baud 460800 write-flash -z 0x0 ESP32_GENERIC_C3-20260406-v1.28.0.bin
 ```
 
 If the above commands run without error then MicroPython should be installed on your board!

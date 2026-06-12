@@ -11,7 +11,7 @@ ap = network.WLAN(network.AP_IF)
 ap.active(False)
 
 esp8266_utils.connect_wifi(env.WIFI_SSID, env.WIFI_PASSWORD)
-esp8266_utils.sync_ntp_time()
+is_time_synchronized = esp8266_utils.sync_ntp_time()
 
 led_red.value(0)
-lego_table.run()
+lego_table.run(is_time_synchronized)
